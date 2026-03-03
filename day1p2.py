@@ -18,7 +18,22 @@ def parse_directions(filepath):
     return numbers
 
 def apply_direction(current_position, offset):
-    return (current_position + 100 + offset) % 100
+    ending_position = (current_position + 100 + offset) % 100
+    passed_zero = abs(offset)//100
+
+    # if we are currently at zero we shouldn't be counting flipping forward or
+    # back as passing 0
+    if current_position == 0:
+        return ending_position, passed_zero
+
+    if ending_position == 0:
+        passed_zero += 1
+    elif offset < 0:
+        passed_zero += 1 if ending_position > current_position else 0
+    else:
+        passed_zero += 1 if ending_position < current_position else 0
+
+    return ending_position, passed_zero
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -31,9 +46,8 @@ if __name__ == "__main__":
     filepath = sys.argv[1]
     numbers = parse_directions(filepath)
     for n in numbers:
-        position = apply_direction(position, n)
-        if position == 0:
-            at_zero += 1
-        print(f"{n}: {position}")
+        position, passed_zero = apply_direction(position, n)
+        at_zero += passed_zero
+        print(f"{n}: {position} {passed_zero}")
 
     print(at_zero)
