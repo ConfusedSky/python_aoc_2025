@@ -1,5 +1,6 @@
 import sys
 import math
+import bisect
 
 def parse_ranges(filepath):
     ranges = []
@@ -19,14 +20,12 @@ def parse_ranges(filepath):
     )
     return ranges
 
-def check_value(value):
+all_scans = {}
+def get_legal_scans(length):
+    if all_scans.get(length):
+        return all_scans[length]
+
     legal_scans = [1]
-    svalue = str(value)
-    length = len(svalue)
-
-    if length == 1:
-        return False
-
     # Check for all legal scan lengths
     # You can square root here because if a value is evenly divisible
     # you get the lower and the higher value and since low*high must be less
@@ -34,16 +33,30 @@ def check_value(value):
     # this can be memorized to speed this up
     for i in range(2, math.floor(math.sqrt(length)) + 1):
         if length % i == 0 and i != length:
-            legal_scans.append(i)
+            # These should be inserted in order
+            bisect.insort(legal_scans, i)
             if length//i != i:
-                legal_scans.append(length//i)
+                bisect.insort(legal_scans, length//i)
 
     # This could be done a lot faster however the number of elements is
     # really low so it doesn't seem to be an issue
     # sort the scans in highest to lowest order so we check the cheaper scans
     # first
-    legal_scans.sort()
     legal_scans.reverse()
+    all_scans[length] = legal_scans
+
+    return legal_scans
+
+
+def check_value(value):
+    svalue = str(value)
+    length = len(svalue)
+
+    if length == 1:
+        return False
+
+    legal_scans = get_legal_scans(length)
+
 
     for scan in legal_scans:
         has_solution = True
