@@ -1,4 +1,5 @@
 import sys
+import math
 
 def parse_ranges(filepath):
     ranges = []
@@ -18,30 +19,57 @@ def parse_ranges(filepath):
     )
     return ranges
 
+def check_value(value):
+    legal_scans = [1]
+    svalue = str(value)
+    length = len(svalue)
+
+    if length == 1:
+        return False
+
+    # Check for all legal scan lengths
+    # You can square root here because if a value is evenly divisible
+    # you get the lower and the higher value and since low*high must be less
+    # than the length this is correct
+    # this can be memorized to speed this up
+    for i in range(2, math.floor(math.sqrt(length)) + 1):
+        if length % i == 0 and i != length:
+            legal_scans.append(i)
+            if length//i != i:
+                legal_scans.append(length//i)
+
+    # This could be done a lot faster however the number of elements is
+    # really low so it doesn't seem to be an issue
+    # sort the scans in highest to lowest order so we check the cheaper scans
+    # first
+    legal_scans.sort()
+    legal_scans.reverse()
+
+    for scan in legal_scans:
+        has_solution = True
+
+        for i in range(0, scan):
+            expected = svalue[i]
+            for index in range(i + scan, length, scan):
+                if svalue[index] != expected:
+                    has_solution = False
+                    break
+            if not has_solution:
+                break
+
+        if has_solution:
+            print(value, scan, legal_scans, length)
+            return True
+
+
+    return False
+
 def check_range(low, high):
     invalid_ids = []
 
-    value = low
-    while value <= high:
-        svalue = str(value)
-        # this can probably be done smarter
-        # however I'm just trying to get this done
-        # ranges need to look at both the low and the high
-        # so the range would need to be bumped up or shortened to
-        # the nearest even number of digits
-        if len(svalue) % 2 == 1:
-            value += 1
-            continue
-
-        # this can be done faster as well by scanning the indexes in place
-        # rather than making two strings
-        midpoint = len(svalue)//2
-        left = svalue[:midpoint]
-        right = svalue[midpoint:]
-        if left == right:
+    for value in range(low, high + 1):
+        if check_value(value):
             invalid_ids.append(value)
-            print(svalue, left, right)
-        value += 1
 
     return invalid_ids
 
